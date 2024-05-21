@@ -104,7 +104,7 @@ const model: ReplaceVariable = {
         valueSelector = valueSelector == null ? defaultSelector : valueSelector.trim().toLowerCase();
         if (valueSelector === '' || allowedValues.findIndex(v => v === valueSelector) < 0) {
             if (valueSelector !== '') {
-                logger.warn(`Unknown skillChange variable value selector ${valueSelector}, defaulting to ${defaultSelector}`);
+                logger.warn(`Unknown ns2SkillChange variable value selector ${valueSelector}, defaulting to ${defaultSelector}`);
             }
             valueSelector = defaultSelector;
         }

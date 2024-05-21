@@ -34,8 +34,8 @@ export const NS2_EXAMPLE_SERVER_LOC: string = "Planet 4546B";
 export const NS2_EXAMPLE_MAP_NAME: string = "ns2_firebot_example";
 /** The sample data value for variable ns2GameMode: "FBeXample" */
 export const NS2_EXAMPLE_GAME_MODE: string = "FirebotGameMode";
-/** The sample data value for variable ns2WinningTeam: "Viwers Like You" */
-export const NS2_EXAMPLE_WINNING_TEAM: string = "Viwers Like You";
+/** The sample data value for variable ns2WinningTeam: "Viewers Like You" */
+export const NS2_EXAMPLE_WINNING_TEAM: string = "Viewers Like You";
 
 type ReadOnlyServerInfo = {
     readonly country: string;
