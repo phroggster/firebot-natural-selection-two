@@ -22,8 +22,6 @@ This script monitors the NS2 log file (at `%APPDATA%\Natural Selection 2\log.txt
 6. (*Optional*) Adjust the script settings *if* desired.
 7. *Save* the script settings, dismiss the "*Startup* *Scripts*" dialog, and you should now have a variety of new events and variables related to Natural Selection 2 available in Firebot.
 
-Save the file to `%APPDATA%\Firebot\v5\profiles\YOUR_PROFILE_NAME_HERE\scripts`.
-
 ### Effects
 - `Pause Events`: Pauses all NS2 events from being triggered. Mainly for development purposes, but could also be used in something like an "OBS Scene Changed" event to pause events when the game capture isn't visible.
 - `Resume Events`: Resumes NS2 events that were previously paused by the "Natural Selection 2: Pause Events" effect mentioned directly above.
