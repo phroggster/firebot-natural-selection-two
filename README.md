@@ -3,7 +3,7 @@ This is a [Firebot](https://firebot.app) script to add integration with the [Nat
 
 This is a work-in-progress, and some features are subject to change. It is currently designed to work with Firebot v5.
 
-### License
+## License
 SPDX-License-Identifier: [GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later.html)
 
 This project is licensed under the terms of the GNU General Public License (GPL) version 3, or at your option, any later version of the GPL. In summary: you may copy, distribute, and modify the software. Any redistributed modifications to this software must also be made available under the terms of the GPL. However, you should review the [full terms of the license](https://www.gnu.org/licenses/gpl-3.0.en.html) for more detail.
@@ -23,14 +23,12 @@ This script monitors the NS2 log file (at `%APPDATA%\Natural Selection 2\log.txt
 7. *Save* the script settings, dismiss the "*Startup* *Scripts*" dialog, and you should now have a variety of new events and variables related to Natural Selection 2 available in Firebot.
 
 ## Features
-[Effects](https://github.com/phroggster/firebot-natural-selection-two/wiki/Effects)
-[Events](https://github.com/phroggster/firebot-natural-selection-two/wiki/Events)
-[Variables](https://github.com/phroggster/firebot-natural-selection-two/wiki/Variables)
+[Effects](https://github.com/phroggster/firebot-natural-selection-two/wiki/Effects) | [Events](https://github.com/phroggster/firebot-natural-selection-two/wiki/Events) | [Variables](https://github.com/phroggster/firebot-natural-selection-two/wiki/Variables)
 
-### Building
+## Building
 Run `npm run build` to compile it into the dist subfolder.
 
 Run `npm run build:dev` to compile and copy it into your Firebot profile's script folder. You will *likely* **need** to restart Firebot if it is already running.
 
-### Testing
+## Testing
 Not yet implemented, and horribly broken. Will someone help me here, wtf am I doing wrong? But `npm run test` once these bugs are sorted out.
