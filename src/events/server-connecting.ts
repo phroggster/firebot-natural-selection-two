@@ -25,7 +25,7 @@ import { ServerEventData } from "../types";
 const model = {
     id: NS2_SERVER_CONNECTING_EVENT_ID,
     name: "Server Connecting",
-    description: "When client is trying to connect to a server",
+    description: "When client is attempting to connect to a server",
     manualMetadata: {
         serverAddr: NS2_EXAMPLE_SERVER_ADDR,
         serverLocation: NS2_EXAMPLE_SERVER_LOC,

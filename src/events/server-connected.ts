@@ -27,7 +27,7 @@ import { GameEventData } from "../types";
 const model = {
     id: NS2_SERVER_CONNECTED_EVENT_ID,
     name: "Server Connected",
-    description: "When client has connected to a server",
+    description: "When client has successfully connected to a server",
     manualMetadata: {
         gameMode: NS2_EXAMPLE_GAME_MODE,
         mapName: NS2_EXAMPLE_MAP_NAME,

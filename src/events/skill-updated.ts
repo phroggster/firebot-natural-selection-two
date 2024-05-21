@@ -20,7 +20,7 @@ import { SkillUpdatedEventData } from "../types";
 const model = {
     id: NS2_SKILL_UPDATED_EVENT_ID,
     name: "Skill Updated",
-    description: "When player's skill has been updated",
+    description: "When player's skill information has been updated",
     manualMetadata: {
         // what a noob.
         playerSkill: {

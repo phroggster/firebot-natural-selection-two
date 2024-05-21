@@ -19,8 +19,8 @@ export const NS2_EVENT_SOURCE_ID: string = "ns2";
 export const NS2_MAP_CHANGED_EVENT_ID: string = "map-changed";
 export const NS2_MAP_CHANGING_EVENT_ID: string = "map-changing";
 export const NS2_ROUND_COMPLETED_EVENT_ID: string = "round-completed";
-export const NS2_SERVER_CONNECTED_EVENT_ID: string = "connected";
-export const NS2_SERVER_CONNECTING_EVENT_ID: string = "connecting";
+export const NS2_SERVER_CONNECTED_EVENT_ID: string = "server-connected";
+export const NS2_SERVER_CONNECTING_EVENT_ID: string = "server-connecting";
 export const NS2_SKILL_UPDATED_EVENT_ID: string = "skill-updated";
 
 
