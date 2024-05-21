@@ -30,7 +30,7 @@ const script: Firebot.CustomScript<ScriptParams> = {
             name: "Natural Selection 2 Integration",
             description: "Adds Natural Selection 2 application events and variables to Firebot",
             author: "phroggie",
-            version: "0.0.3",
+            version: "0.1.0",
             firebotVersion: "5",
             startupOnly: true,
         };
@@ -61,7 +61,6 @@ const script: Firebot.CustomScript<ScriptParams> = {
     run: async (runRequest) => {
         const { modules, parameters } = runRequest;
         let result: ScriptReturnObject = {
-            // callback: scriptStartupCallback,
             effects: [],
             errorMessage: '',
             success: true,
