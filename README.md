@@ -1,12 +1,12 @@
 # About
-This is a [Firebot](https://firebot.app) script to add integration with the [Natural Selection 2](https://store.steampowered.com/app/4920/Natural_Selection_2/) game created by [Unknown Worlds Entertainment](https://store.steampowered.com/developer/unknown-worlds). Natural Selection 2 is a multiplayer first-person shoorter and real-time strategy game.
+This is a [Firebot](https://firebot.app) script to add integration with the [Natural Selection 2](https://store.steampowered.com/app/4920/Natural_Selection_2/) game created by [Unknown Worlds Entertainment](https://store.steampowered.com/developer/unknown-worlds). Natural Selection 2 is a multiplayer first-person shooter and real-time strategy game.
 
-This is a work-in-progress, and some features are subject to change. It is currently designed to work with Firebot v5.
+This project is a work-in-progress, and some features are subject to change. It is currently designed to work with Firebot v5.
 
 ## License
 SPDX-License-Identifier: [GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later.html)
 
-This project is licensed under the terms of the GNU General Public License (GPL) version 3, or at your option, any later version of the GPL. In summary: you may copy, distribute, and modify the software. Any redistributed modifications to this software must also be made available under the terms of the GPL. However, you should review the [full terms of the license](https://www.gnu.org/licenses/gpl-3.0.en.html) for more detail.
+This project is licensed under the terms of the GNU General Public License (GPL) version 3, or at your option, any later version of the GPL. In summary: you may copy, distribute, and modify the software, as long as you don't distribute it with software with an incomplete license. Any redistributed modifications to this software must also be made available under the terms of the GPL, and must include the LICENSE file included with this software. However, you should review the [full terms of the license](https://www.gnu.org/licenses/gpl-3.0.en.html) for more details.
 
 ## Design
 This script monitors the NS2 log file (at `%APPDATA%\Natural Selection 2\log.txt`), adds some state tracking for it, and Bob's yer uncle.
