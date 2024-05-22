@@ -6,7 +6,7 @@ This project is a work-in-progress, and some features are subject to change. It 
 ## License
 SPDX-License-Identifier: [GPL-3.0-or-later](https://spdx.org/licenses/GPL-3.0-or-later.html)
 
-This project is licensed under the terms of the GNU General Public License (GPL) version 3, or at your option, any later version of the GPL. In summary: you may copy, distribute, and modify the software, as long as you don't distribute it with software of an incompatible license. Any redistributed modifications to this software must also be made available under the terms of the GPL, and must include the LICENSE file included with this software. However, you should review the [full terms of the license](https://www.gnu.org/licenses/gpl-3.0.en.html) for more details.
+This project is licensed under the terms of the GNU General Public License (GPL) version 3, or at your option, any later version of the GPL. See the [LICENSE](LICENSE) file included with this software for details, but in summary: you may use, copy, distribute, and modify the software freely, provided that you license it under these same terms, and provided that you don't distribute it alongsde software of an incompatible license.
 
 ## Design
 This script monitors the NS2 log file (at `%APPDATA%\Natural Selection 2\log.txt`), adds some state tracking for it, and Bob's yer uncle.
