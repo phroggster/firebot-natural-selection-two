@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -16,23 +16,27 @@
 
 import { ScriptModules } from "@crowbartools/firebot-custom-scripts-types";
 
-export let logger = {
-    debug: (msg: string, ...meta: any[]) => { },
-    info: (msg: string, ...meta: any[]) => { },
-    warn: (msg: string, ...meta: any[]) => { },
-    error: (msg: string, ...meta: any[]) => { },
+export let logger: ScriptModules["logger"] = {
+    debug: () => { },
+    info: () => { },
+    warn: () => { },
+    error: () => { },
 };
 
-export function initLogger(modules: ScriptModules) {
+export function initLogger(modules: ScriptModules): void {
+    if (!modules || !modules.logger) {
+        return;
+    }
+
     logger = {
-        debug: (msg: string, ...meta: any[]) => { modules.logger.debug(`ns2: ${msg}`, meta); },
-        info: (msg: string, ...meta: any[]) => { modules.logger.info(`ns2: ${msg}`, meta); },
-        warn: (msg: string, ...meta: any[]) => { modules.logger.warn(`ns2: ${msg}`, meta); },
-        error: (msg: string, ...meta: any[]) => { modules.logger.error(`ns2: ${msg}`, meta); },
+        debug: (msg: string, ...meta: undefined[]) => { modules.logger.debug(`ns2: ${msg}`, meta); },
+        info: (msg: string, ...meta: undefined[]) => { modules.logger.info(`ns2: ${msg}`, meta); },
+        warn: (msg: string, ...meta: undefined[]) => { modules.logger.warn(`ns2: ${msg}`, meta); },
+        error: (msg: string, ...meta: undefined[]) => { modules.logger.error(`ns2: ${msg}`, meta); },
     };
 };
 
-export function detachLogger() {
+export function destroyLogger(): void {
     logger = {
         debug: () => { },
         info: () => { },

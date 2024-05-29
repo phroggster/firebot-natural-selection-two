@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -14,10 +14,11 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-import { NS2_EXAMPLE_GAME_MODE, NS2_EXAMPLE_MAP_NAME, NS2_EXAMPLE_SERVER_ADDR, serverList } from "../constants";
+import { NS2_EXAMPLE_GAME_MODE, NS2_EXAMPLE_MAP_NAME, NS2_EXAMPLE_SERVER_ADDR } from "../constants";
+import serverList from "../server-list";
 import { EGameState, GameData } from "../types";
 
-type MinGameInfoData = {
+type MinGameInfoModel = {
     mapName: string;
     serverAddr: string;
     state: EGameState;
@@ -28,7 +29,7 @@ type MinGameInfoData = {
  * @param model A MinGameInfoModel to expand.
  * @returns A GameInfoModel with extra information, or null.
  */
-export function inflateGameInfoData(model: MinGameInfoData): GameData {
+export function inflateGameInfoData(model: MinGameInfoModel): GameData {
     if (model == null || model == undefined) {
         throw new Error('model parameter is null or undefined');
     }
@@ -54,6 +55,7 @@ export function inflateGameInfoData(model: MinGameInfoData): GameData {
  */
 export function getGameModeFromMapName(mapName: string): string {
     const lut = [
+        { k: NS2_EXAMPLE_MAP_NAME, v: NS2_EXAMPLE_GAME_MODE },
         { k: "co_", v: "Combat" },
         { k: "dc_", v: "Defense" },
         { k: "de_", v: "Defense" },
@@ -77,7 +79,7 @@ export function getGameModeFromMapName(mapName: string): string {
         if (mapName == "unknown") {
             return "unknown";
         }
-        for (var kvp of lut) {
+        for (const kvp of lut) {
             if (mapName.startsWith("ns2_".concat(kvp.k)) || mapName.startsWith("ns_".concat(kvp.k)) || mapName.startsWith(kvp.k)) {
                 return kvp.v;
             }
@@ -116,7 +118,7 @@ export function getServerLocationFromAddress(serverAddr: string): string | null 
 
     serverAddr = serverAddr?.trim();
     if (serverAddr && serverAddr.length >= minLen) {
-        const item = serverList.servers.find(s => s.ip === serverAddr);
+        const item = serverList.find(s => s.ip === serverAddr);
         if (item !== null && item !== undefined) {
             return item.country;
         }
@@ -133,8 +135,8 @@ export function getServerNameFromAddress(serverAddr: string): string | null {
     const minLen = 9; // "1.3.5.7:9".length;
 
     serverAddr = serverAddr?.trim();
-    if (serverAddr && serverAddr.length >= 9) {
-        const item = serverList.servers.find(s => s.ip === serverAddr);
+    if (serverAddr && serverAddr.length >= minLen) {
+        const item = serverList.find(s => s.ip === serverAddr);
         if (item !== null && item !== undefined) {
             return item.name;
         }

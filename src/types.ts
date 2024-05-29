@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -18,6 +18,8 @@
 export interface ScriptParams {
     /** The path to the NS2 application log file on disk. */
     logFile: string;
+    /** Whether auto-update checks are enabled for the Natural Selection 2 Firebot plugin. */
+    updateChecks: boolean;
 };
 
 /** An enum representing the possible states of an NS2 game session. */
@@ -56,6 +58,28 @@ export interface SkillData {
 };
 
 
+export interface ApplyUpdateEffectModel {
+    downloadUrl: string;
+    fileName: string;
+    scriptsFolder: string;
+};
+
+export type AnyEventData =
+    GameEventData |
+    MapEventData |
+    RoundCompletedEventData |
+    ServerEventData |
+    SkillUpdatedEventData |
+    UpdateAvailableEventData;
+
+/** The type needed by Firebot to register an event source. */
+export type EventDefinition = {
+    id: string,
+    name: string,
+    description: string,
+    manualMetadata?: AnyEventData,
+};
+
 /** Information about a game event. Includes both server and map information. */
 export type GameEventData = MapEventData & ServerEventData;
 
@@ -65,8 +89,8 @@ export type MapEventData = {
     mapName: string;
 };
 
-/** Information about a team victory event. */
-export type RoundCompletedEventData = GameEventData & {
+/** Information about a round completed event. */
+export type RoundCompletedEventData = GameEventData & MapEventData & {
     winningTeam: string;
 };
 
@@ -81,4 +105,188 @@ export type ServerEventData = {
 export type SkillUpdatedEventData = {
     playerSkill: PairedSkillData;
     skillChange: PairedSkillData;
+};
+
+/** Information about an update to this software. */
+export type UpdateAvailableEventData = {
+    availableVersion: string;
+    currentVersion: string;
+    directUrl: string;
+    releaseUrl: string;
+};
+
+// https://docs.github.com/en/rest/releases/releases?apiVersion=2022-11-28#get-the-latest-release
+/*
+export enum EGithubAssetState {
+    open = "open",
+    uploaded = "uploaded",
+}
+
+export type GithubUser = {
+    login: string,
+    id: number,
+    node_id: string,
+    avatar_url: string,
+    gravatar_id: string | null,
+    url: string,
+    html_url: string,
+    followers_url: string,
+    following_url: string,
+    gists_url: string,
+    starred_url: string,
+    subscriptions_url: string,
+    organizations_url: string,
+    repos_url: string,
+    events_url: string,
+    received_events_url: string,
+    type: string,
+    site_admin: boolean,
+
+    name?: string | null,
+    email?: string | null,
+    starred_at?: string,
+}
+
+export type GithubAsset = {
+    url: string,
+    id: number,
+    node_id: string,
+    name: string,
+    label: string | null,
+    state: string, // EAssetState, // string,
+    content_type: string,
+    size: number,
+    download_count: number,
+    created_at: string,
+    updated_at: string,
+    uploader: GithubUser | null,
+
+    browser_download_url?: string,
+}
+
+export type GithubReleaseData = {
+    url: string,
+    assets_url: string,
+    upload_url: string,
+    html_url: string,
+    id: number,
+    author: GithubUser | undefined,
+    node_id: string,
+    tag_name: string,
+    target_commitish: string,
+    name: string,
+    draft: boolean,
+    prerelease: boolean,
+    created_at: string,
+    published_at: string,
+    assets: Array<GithubAsset> | undefined,
+    tarball_url: string,
+    zipball_url: string,
+
+    body: string | null,
+    discussion_url: string | null,
+
+    body_html: string | null,
+    body_text: string | null,
+    mentions_count: number | null,
+    reactions: {
+        url?: string,
+        total_count?: number,
+        '+1'?: number,
+        '-1'?: number,
+        laugh?: number,
+        confused?: number,
+        heart?: number,
+        hooray?: number,
+        eyes?: number,
+        rocket?: number,
+    } | null
+};
+*/
+
+export type GithubReactionRollup = {
+    url: string;
+    total_count: number;
+    confused: number;
+    eyes: number;
+    heart: number;
+    hooray: number;
+    laugh: number;
+    rocket: number;
+    "+1": number;
+    "-1": number;
+};
+
+export type GithubReleaseAssetData = {
+    url: string;
+    id: number;
+    node_id: string;
+    /** The file name of the asset. */
+    name: string;
+    label: string | null;
+    uploader: GithubUserData | null;
+    content_type: string;
+    /** State of the release asset. */
+    state: "uploaded" | "open";
+    size: number;
+    download_count: number;
+    created_at: string;
+    updated_at: string;
+    browser_download_url: string;
+};
+
+export type GithubReleaseData = {
+    url: string;
+    assets_url: string;
+    upload_url: string;
+    html_url: string;
+    id: number;
+    author: GithubUserData;
+    node_id: string;
+    /** The name of the tag. */
+    tag_name: string;
+    /** The commitish value which the release was created from. */
+    target_commitish: string;
+    name: string | null;
+    /** `true` if the release is a draft (unpublished) release; `false` if it's a published one. */
+    draft: boolean;
+    /** Whether to identify the release as a prerelease or a full release. */
+    prerelease: boolean;
+    created_at: string;
+    published_at: string | null;
+    assets: GithubReleaseAssetData[];
+    tarball_url: string | null;
+    zipball_url: string | null;
+    body?: string | null;
+    /** The URL of the release discussion. */
+    discussion_url?: string;
+
+    body_html?: string;
+    body_text?: string;
+    mentions_count?: number;
+    reactions?: GithubReactionRollup;
+};
+
+export type GithubUserData = {
+    login: string;
+    id: number;
+    node_id: string;
+    avatar_url: string;
+    gravatar_id: string | null;
+    url: string;
+    html_url: string;
+    followers_url: string;
+    following_url: string;
+    gists_url: string;
+    starred_url: string;
+    subscriptions_url: string;
+    organizations_url: string;
+    repos_url: string;
+    events_url: string;
+    received_events_url: string;
+    type: string;
+    site_admin: boolean;
+    email?: string | null;
+    name?: string | null;
+    starred_at?: string;
 };

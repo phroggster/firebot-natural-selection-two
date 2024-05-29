@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -16,21 +16,22 @@
 
 import { Firebot, ScriptReturnObject } from "@crowbartools/firebot-custom-scripts-types";
 
-import { NS2_EVENT_SOURCE_ID } from "./constants";
-import { initLogger, logger } from "./logger";
-import { ns2Monitor } from "./ns2-monitor";
+import { NS2_EVENT_SOURCE_ID, PLUGIN_VERSION_ID } from "./constants";
+import ns2Effects from "./effects";
+import ns2Events from "./events";
+import { destroyLogger, initLogger, logger } from "./logger";
+import ns2Monitor from "./ns2-monitor";
 import { ScriptParams } from "./types";
-import ns2Effects from "./effects/index";
-import ns2Events from "./events/index";
-import ns2Variables from "./variables/index";
+import updateChecker from "./update-checker";
+import ns2Variables from "./variables";
 
-const script: Firebot.CustomScript<ScriptParams> = {
-    getScriptManifest: () => {
+const ns2Script: Firebot.CustomScript<ScriptParams> = {
+    getScriptManifest: async () => {
         return {
             name: "Natural Selection 2 Integration",
             description: "Adds Natural Selection 2 application events and variables to Firebot",
             author: "phroggie",
-            version: "0.1.0",
+            version: PLUGIN_VERSION_ID,
             firebotVersion: "5",
             startupOnly: true,
         };
@@ -53,16 +54,24 @@ const script: Firebot.CustomScript<ScriptParams> = {
                     buttonLabel: "Open",
                 },
             },
+            updateChecks: {
+                type: "boolean",
+                default: true,
+                description: "Enable automatic update checks",
+                secondaryDescription: "Script will check for updates during startup, and notify you when one is available",
+            },
         };
     },
-    parametersUpdated: async (parameters) => {
-        await ns2Monitor.updateParams(parameters);
+    parametersUpdated: async (scriptParams) => {
+        await ns2Monitor.updateSettings(scriptParams);
+        await updateChecker.updateSettings(scriptParams);
     },
     run: async (runRequest) => {
         const { modules, parameters } = runRequest;
-        let result: ScriptReturnObject = {
+        const result: ScriptReturnObject = {
+            callback: undefined,
             effects: [],
-            errorMessage: '',
+            errorMessage: undefined,
             success: true,
         };
 
@@ -102,7 +111,15 @@ const script: Firebot.CustomScript<ScriptParams> = {
             }
         }
 
-        // And lastly, the glue to bind it all together
+        // Update checker
+        try {
+            await updateChecker.initialize(modules, parameters);
+        }
+        catch (err) {
+            logger.warn("Error initializing auto-update checks for the NS2 integration plugin", err);
+        }
+
+        // The actual stuff that we care about
         try {
             await ns2Monitor.initialize(parameters, modules);
         }
@@ -112,15 +129,15 @@ const script: Firebot.CustomScript<ScriptParams> = {
             result.success = false;
         }
 
-        logger.info("Plugin initialization complete");
+        logger.info("Done with plugin initialization");
         return result;
     },
-    stop: () => {
-        logger.info("Stopping Natural Selection 2 plugin: nop");
-        ns2Monitor.destroy();
+    stop: async () => {
+        logger.info("Stopping Natural Selection 2 plugin");
+        await ns2Monitor.destroy();
         // TODO: There's no way to detach from anything else that we're using, besides perhaps the logger.
-        // detachLogger();
+        destroyLogger();
     },
 };
 
-export default script;
+export default ns2Script;

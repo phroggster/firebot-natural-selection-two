@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -15,9 +15,9 @@
 // GNU General Public License for more details.
 
 import { NS2_SKILL_UPDATED_EVENT_ID } from "../constants";
-import { SkillUpdatedEventData } from "../types";
+import { EventDefinition } from "../types";
 
-const model = {
+const model: EventDefinition = {
     id: NS2_SKILL_UPDATED_EVENT_ID,
     name: "Skill Updated",
     description: "When player's skill information has been updated",
@@ -60,7 +60,7 @@ const model = {
                 marineComSkill: 0,
             }
         },
-    } as SkillUpdatedEventData,
+    },
 };
 
 export default model;

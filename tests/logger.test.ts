@@ -14,23 +14,19 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-import {
-    NS2_EXAMPLE_SERVER_ADDR,
-    NS2_EXAMPLE_SERVER_LOC,
-    NS2_EXAMPLE_SERVER_NAME,
-    NS2_MAP_CHANGING_EVENT_ID,
-} from "../constants";
-import { EventDefinition } from "../types";
+import { logger } from "../src/logger";
 
-const model: EventDefinition = {
-    id: NS2_MAP_CHANGING_EVENT_ID,
-    name: "Map Changing",
-    description: "Map is changing, but next map IS NOT YET KNOWN",
-    manualMetadata: {
-        serverAddr: NS2_EXAMPLE_SERVER_ADDR,
-        serverLocation: NS2_EXAMPLE_SERVER_LOC,
-        serverName: NS2_EXAMPLE_SERVER_NAME,
-    },
-};
+test('initial logger is not undefined', () => {
+    expect(logger).not.toBeUndefined();
+    expect(logger.debug).not.toBeUndefined();
+    expect(logger.info).not.toBeUndefined();
+    expect(logger.warn).not.toBeUndefined();
+    expect(logger.error).not.toBeUndefined();
+});
 
-export default model;
+test('starting logger does not throw before init', () => {
+    expect(() => { logger.debug("Test"); }).not.toThrow();
+    expect(() => { logger.info("Test"); }).not.toThrow();
+    expect(() => { logger.warn("Test"); }).not.toThrow();
+    expect(() => { logger.error("Test"); }).not.toThrow();
+});

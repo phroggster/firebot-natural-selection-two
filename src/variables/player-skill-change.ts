@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -18,7 +18,7 @@ import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/type
 import { Effects } from "@crowbartools/firebot-custom-scripts-types/types/effects";
 
 import { logger } from "../logger";
-import { ns2Monitor } from "../ns2-monitor";
+import ns2Monitor from "../ns2-monitor";
 import { PairedSkillData, SkillUpdatedEventData } from "../types";
 import { summarizeSkillData, summarizeSkillDataPair } from "../types/skill-data";
 
@@ -94,7 +94,7 @@ const model: ReplaceVariable = {
         ],
         possibleDataOutput: ["number", "text"],
     },
-    evaluator: async (trigger: Effects.Trigger, valueSelector: string, ...extra: any[]): Promise<number|string> => {
+    evaluator: async (trigger: Effects.Trigger, valueSelector: string): Promise<number | string> => {
         const allowedValues = [
             "pub", "skill", "com", "alien", "marine", "aliencom", "marinecom",
             "td", "tdskill", "tdcom", "tdalien", "tdmarine", "tdaliencom", "tdmarinecom",

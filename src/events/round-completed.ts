@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -23,9 +23,9 @@ import {
     NS2_EXAMPLE_WINNING_TEAM,
     NS2_ROUND_COMPLETED_EVENT_ID,
 } from "../constants";
-import { RoundCompletedEventData } from "../types";
+import { EventDefinition } from "../types";
 
-const model = {
+const model: EventDefinition = {
     id: NS2_ROUND_COMPLETED_EVENT_ID,
     name: "Round Completed",
     description: "When a game round has been completed",
@@ -36,7 +36,7 @@ const model = {
         serverLocation: NS2_EXAMPLE_SERVER_LOC,
         serverName: NS2_EXAMPLE_SERVER_NAME,
         winningTeam: NS2_EXAMPLE_WINNING_TEAM,
-    } as RoundCompletedEventData,
+    },
 };
 
 export default model;

@@ -1,26 +1,42 @@
-import { RunRequest, ScriptModules } from "firebot-custom-scripts-types";
-import { ArgumentsOf } from "ts-jest/dist/utils/testing";
-import customScript from "../src/main";
-test("main default export is the custom script", () => {
-  expect(customScript).not.toBeUndefined();
-  expect(customScript.run).not.toBeUndefined();
-  expect(customScript.getScriptManifest).not.toBeUndefined();
-  expect(customScript.getDefaultParameters).not.toBeUndefined();
+// Natural Selection 2 application integration for Firebot
+//
+// Copyright © 2024 by phroggie
+//
+// SPDX-License-Identifier: GPL-3.0-or-later
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// TODO: a different jest transpiler? SyntaxError: Unexpected token 'export'
+//import { isValidSemVer, parseSemVer } from 'semver-parser';
+import ns2Script from '../src/main';
+import packageJson from '../package.json';
+
+test('script exports are appropriate', () => {
+    expect(ns2Script).not.toBeUndefined();
+
+    expect(ns2Script.getScriptManifest).not.toBeUndefined();
+    expect(ns2Script.getDefaultParameters).not.toBeUndefined();
+    expect(ns2Script.parametersUpdated).not.toBeUndefined();
+    expect(ns2Script.run).not.toBeUndefined();
+    expect(ns2Script.stop).not.toBeUndefined();
 });
 
-test("run() calls logger.info with the message", async () => {
-  const mockInfoLog = jest.fn<
-    void,
-    ArgumentsOf<ScriptModules["logger"]["info"]>
-  >();
-  const expectedMessage = "foobar";
-  const runRequest = ({
-    parameters: { message: expectedMessage },
-    modules: { logger: { info: mockInfoLog } },
-  } as unknown) as RunRequest<any>;
+test('script manifest version is legit', async () => {
+    const scriptManifest = await ns2Script.getScriptManifest();
 
-  await customScript.run(runRequest);
+    expect(scriptManifest.version).not.toBeNull();
+    expect(scriptManifest.version).not.toBeUndefined();
 
-  expect(mockInfoLog.mock.calls.length).toBe(1);
-  expect(mockInfoLog.mock.calls[0][0]).toBe(expectedMessage);
+    expect(scriptManifest.version).toBeInstanceOf(typeof String);
+    expect(scriptManifest.version).toStrictEqual(packageJson.version);
+    //expect(isValidSemVer(scriptManifest.version, true)).toEqual(true);
+    //expect(parseSemVer(scriptManifest.version, true)).not.toBeUndefined();
 });

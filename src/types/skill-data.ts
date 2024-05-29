@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -18,7 +18,7 @@ import { PairedSkillData, SkillData } from "../types";
 
 // Repeatedly string.replace(...) until the value no longer changes after an iteration
 function replaceAll(inputValue: string, searchValue: string | RegExp, replaceValue: string): string {
-    var result = inputValue.replace(searchValue, replaceValue);
+    let result = inputValue.replace(searchValue, replaceValue);
     while (result != inputValue) {
         inputValue = result;
         result = inputValue.replace(searchValue, replaceValue);
@@ -46,9 +46,9 @@ type LuaSkillModel = {
  * @param parseErrCb A callback that will be invoked if a parsing error occurs.
  * @returns A PairedSkillModel representing the string.
  */
-export function deserializeSkillModel(luaStr: string, parseErrCb: (jstr: string, err: any) => void) : PairedSkillData | null {
+export function deserializeSkillModel(luaStr: string, parseErrCb: (jstr: string, err: unknown) => void): PairedSkillData | null {
     if (!luaStr || luaStr.length < 20) {
-        parseErrCb("(null)", "Null or insufficient luaStr passed to deserializeSkillModel");
+        parseErrCb("(null)", new Error("Null or insufficient luaStr passed to deserializeSkillModel"));
         return null;
     }
 
@@ -57,7 +57,7 @@ export function deserializeSkillModel(luaStr: string, parseErrCb: (jstr: string,
     // Sample expected string, with values for 15 and 16 fudged (latitude & longitude):
     // {1 = "2,966",2 = "439",3 = "-,309",4 = "-,457",5 = "6.283908367157",6 = "1,976",7 = "795",8 = "-,119",9 = "11",10 = "4.3614330291748",11 = "600",12 = "9,797,646",13 = "0",14 = "",15 = "69",16 = "420",17 = "true"}
 
-    var jsonStr = luaStr.trim()
+    let jsonStr = luaStr.trim()
         // trim off keys 11 and later, these are meaningless to us (as is 10, but leave it for parsing into an inGameSkillStruct)
         .substring(0, luaStr.indexOf(',11 = '))
         // correct the json obj terminator
@@ -105,20 +105,20 @@ export function deserializeSkillModel(luaStr: string, parseErrCb: (jstr: string,
 
     return {
         pub: {
-            skill:          luaModel.skill,
-            comSkill:       luaModel.comSkill,
-            alienSkill:     luaModel.skill      - luaModel.skillOffset,
-            alienComSkill:  luaModel.comSkill   - luaModel.comSkillOffset,
-            marineSkill:    luaModel.skill      + luaModel.skillOffset,
-            marineComSkill: luaModel.comSkill   + luaModel.comSkillOffset,
+            skill: luaModel.skill,
+            comSkill: luaModel.comSkill,
+            alienSkill: luaModel.skill - luaModel.skillOffset,
+            alienComSkill: luaModel.comSkill - luaModel.comSkillOffset,
+            marineSkill: luaModel.skill + luaModel.skillOffset,
+            marineComSkill: luaModel.comSkill + luaModel.comSkillOffset,
         },
         td: {
-            skill:          luaModel.tdSkill,
-            comSkill:       luaModel.tdComSkill,
-            alienSkill:     luaModel.tdSkill      - luaModel.tdSkillOffset,
-            alienComSkill:  luaModel.tdComSkill   - luaModel.tdComSkillOffset,
-            marineSkill:    luaModel.tdSkill      + luaModel.tdSkillOffset,
-            marineComSkill: luaModel.tdComSkill   + luaModel.tdComSkillOffset,
+            skill: luaModel.tdSkill,
+            comSkill: luaModel.tdComSkill,
+            alienSkill: luaModel.tdSkill - luaModel.tdSkillOffset,
+            alienComSkill: luaModel.tdComSkill - luaModel.tdComSkillOffset,
+            marineSkill: luaModel.tdSkill + luaModel.tdSkillOffset,
+            marineComSkill: luaModel.tdComSkill + luaModel.tdComSkillOffset,
         }
     };
 };

@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -14,9 +14,9 @@
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
 
-import { promises as fs } from "fs";
 import { ScriptModules } from "@crowbartools/firebot-custom-scripts-types";
-import { Tail } from "tail";
+import split2 from "split2";
+import TailFile from "@logdna/tail-file";
 
 import {
     NS2_EVENT_SOURCE_ID,
@@ -37,26 +37,20 @@ import {
     RoundCompletedEventData,
     ScriptParams,
     ServerEventData,
-    SkillUpdatedEventData,
     SkillData,
+    SkillUpdatedEventData,
 } from "./types";
 import { getSteamConnectUriFromAddress, inflateGameInfoData } from "./types/game-data";
 import { deserializeSkillModel, summarizeSkillDataPair } from "./types/skill-data";
 
-type PackedSkillData = {
+type SkillDatas = {
     current: PairedSkillData;
     prior: PairedSkillData;
     delta: PairedSkillData;
 };
 
-var eventManager: ScriptModules["eventManager"];
-var fileTail: Tail;
-var isManuallyPaused: boolean = false;
-var isReadingBacklog: boolean = true;
-var lineNum: number = 0;
-var lineNumsNeeded: number = 0;
-
-var gameData = {
+let eventManager: ScriptModules["eventManager"];
+let gameData = {
     gameMode: "unknown",
     mapName: "unknown",
     serverAddr: "none",
@@ -64,47 +58,75 @@ var gameData = {
     serverName: "unknown",
     state: EGameState.Unknown
 } as GameData;
-var skills: PackedSkillData;
-var steamId: string = "";
+let isManuallyPaused: boolean = false;
+let isReadingBacklog: boolean = true;
+let lineNum: number = 0;
+let skills: SkillDatas = getEmptySkills();
+let steamId: string = "";
+let watcher: TailFile;
 
-function buildWatcher(pathToLogFile: string): void {
-    fileTail?.unwatch();
-    lineNum = 0;
-
-    fileTail = new Tail(pathToLogFile, {
-        encoding: "utf-8",
-        flushAtEOF: true,
-        follow: true,
-        fromBeginning: true,
-        fsWatchOptions: {
-            persistent: true,
-        },
-    });
-    fileTail.on("line", (lineStr: string) => {
-        ++lineNum;
-
-        if (lineStr == null || lineStr.length < 1) {
-            return;
-        }
-        if (isReadingBacklog && lineNum >= lineNumsNeeded) {
-            isReadingBacklog = false;
-        }
-
-        let handled =
-            handleConnecting(lineStr) ||
-            handleMapLoaded(lineStr) ||
-            handleModServices(lineStr) ||
-            handleSkill(lineStr) ||
-            handleSteamId(lineStr) ||
-            handleVictory(lineStr);
-    });
-    fileTail.on("error", (err) => {
-        logger.error(`Monitor encountered an error on line ${lineNum}`, err);
-    });
+type RenameOrTruncEvtData = { message: string, filename: string, when: Date };
+type RetryData = { message: string, filename: string, attempts: number, when: Date };
+type TailError = Error & {
+    code: string | undefined,
+    meta: {
+        actual: Error | undefined,
+        code: string | undefined,
+        error: string | undefined,
+    } | undefined,
 };
 
-function clearSkillData(): void {
-    skills = {
+async function buildWatcher(pathToLogFile: string): Promise<TailFile> {
+    const tail = new TailFile(pathToLogFile, {
+        encoding: "utf8",
+        pollFileIntervalMs: 625,
+        startPos: 0,
+    });
+    await tail.on("close", () => {
+        logger.debug("TailFile is closing the file, and probably shutting down");
+    }).on("error", (err: Error) => {
+        // error in one of our listeners, most likely
+        logger.error("TailFile.error received", err);
+        throw err;
+    }).on("flush", (/*lastReadPosition: number*/) => {
+        // eof reached during read
+        isReadingBacklog = false;
+    }).on("tail_error", (err: TailError) => {
+        // err in TailFile or our usage of it
+        logger.error(`TailFile.tail_error received (${err.code || err.meta?.code || "(unknown)"}): ${err.message || err.meta?.actual?.message || "(unknown)"}`, err);
+        throw err;
+    }).on("renamed", (data: RenameOrTruncEvtData) => {
+        // logrotate
+        logger.debug(`TailFile.renamed received: ${data.message}`);
+        isReadingBacklog = false;
+        // are we following the new file or the old one here?
+    }).on("retry", (data: RetryData) => {
+        logger.debug(`TailFile.retry received: ${data.message}`);
+        // logrotate, but no new file yet.
+        // just ignore it...
+    }).on("truncated", (data: RenameOrTruncEvtData) => {
+        logger.debug(`TailFile.truncated received, assuming logs are rotating: ${data.message}`);
+        isReadingBacklog = false;
+        lineNum = 0;
+    }).start()
+        .catch((err) => {
+            logger.error("TailFile.start.error, does the file exist?", err);
+        });
+
+    tail.pipe(split2())
+        .on("data", (line) => {
+            lineNum++;
+            if (!(handleConnecting(line) || handleMapLoaded(line) || handleModServices(line) || handleSkill(line) || handleSteamId(line) || handleVictory(line))) {
+                // Re-enable this if ever needing to verify line-splitting, or while porting to BSD or Linux or something.
+                // logger.debug(`Ignoring log line: ${line}`);
+            }
+        });
+
+    return tail;
+};
+
+function getEmptySkills(): SkillDatas {
+    return {
         current: {
             pub: {
                 skill: 0,
@@ -159,31 +181,11 @@ function clearSkillData(): void {
                 marineComSkill: 0,
             } as SkillData,
         } as PairedSkillData,
-    } as PackedSkillData;
+    } as SkillDatas;
 };
 
-// count the number of lines in a file. Hope you've got enough memory for it, sorry.
-// TODO: this might need to be done differently if we ever block for more than ~10 seconds.
-async function countLinesInFile(filePath: string): Promise<number> {
-    const data = await fs.readFile(filePath, { encoding: "utf-8" });
-    if (data.length <= 0 || !data.includes("\n")) {
-        return 0;
-    }
-
-    var eol = "\r\n";
-    if (!data.includes(eol)) {
-        eol = "\n";
-    }
-
-    var result = 0;
-    for (var n = data.indexOf(eol, 0); n > 0 && n < data.length; n = data.indexOf(eol, n + eol.length)) {
-        ++result;
-    }
-    return result;
-};
-
-// [ 31.025] MainThread : Connecting to server 12.34.56.78:90123
 function handleConnecting(lineStr: string): boolean {
+    // [ 31.025] MainThread : Connecting to server 12.34.56.78:90123
     const connectingStr = "] MainThread : Connecting to server";
     if (!lineStr || lineStr.length < connectingStr.length + 9 || !lineStr.includes(connectingStr)) {
         return false;
@@ -199,47 +201,37 @@ function handleConnecting(lineStr: string): boolean {
     return true;
 };
 
-// Finished loading 'maps/ns2_descent.level'
 function handleMapLoaded(lineStr: string): boolean {
+    // Finished loading 'maps/ns2_descent.level'
     const mapLoadedStr = "Finished loading 'maps/";
     if (!lineStr.startsWith(mapLoadedStr)) {
         return false;
     }
 
-    var mapNameStr = lineStr.substring(lineStr.indexOf(mapLoadedStr) + mapLoadedStr.length);
+    const oldState = gameData.state;
+    let mapNameStr = lineStr.substring(lineStr.indexOf(mapLoadedStr) + mapLoadedStr.length);
     mapNameStr = mapNameStr.substring(0, mapNameStr.lastIndexOf(".level'"));
-
-    const reasonMsg = `Finished loading map ${mapNameStr}`;
     gameData = inflateGameInfoData({ mapName: mapNameStr, serverAddr: gameData.serverAddr, state: gameData.state });
 
-    switch (gameData.state) {
-        case EGameState.Connecting:
-            // no easy way to know game state during connection. Likely game in progress, but who actually knows...
-            setState(EGameState.Connected, reasonMsg);
-            if (!isReadingBacklog && !isManuallyPaused) {
+    setState(EGameState.Connected, `Loaded map ${mapNameStr}`);
+    if (!isReadingBacklog && !isManuallyPaused) {
+        switch (oldState) {
+            case EGameState.Connecting:
                 eventManager.triggerEvent(NS2_EVENT_SOURCE_ID, NS2_SERVER_CONNECTED_EVENT_ID, gameData as GameEventData, false);
-            }
-            break;
-        case EGameState.MapChange:
-            setState(EGameState.Connected, reasonMsg);
-            if (!isReadingBacklog && !isManuallyPaused) {
+                break;
+            case EGameState.MapChange:
                 eventManager.triggerEvent(NS2_EVENT_SOURCE_ID, NS2_MAP_CHANGED_EVENT_ID, gameData as MapEventData, false);
-            }
-            break;
-        case EGameState.Postgame:
-            setState(EGameState.Connected, reasonMsg);
-            break;
-        default:
-            logger.warn("Map loaded from an unexpected state!");
-            setState(EGameState.Connected, reasonMsg);
-            break;
+                break;
+            default:
+                break;
+        }
     }
 
     return true;
 };
 
-// ModServices::InitializeModServices()
 function handleModServices(lineStr: string): boolean {
+    // ModServices::InitializeModServices()
     const modUpdateStr = "ModServices::InitializeModServices()";
     if (lineStr !== modUpdateStr) {
         return false;
@@ -255,14 +247,14 @@ function handleModServices(lineStr: string): boolean {
     return true;
 };
 
-// Client  : 1284.019531 : Current hive profile data: {1 = "2,966",2 = "439",3 = "-,309",4 = "-,457",5 = "6.283908367157",6 = "1,976",7 = "795",8 = "-,119",9 = "11",10 = "4.3614330291748",11 = "600",12 = "9,797,646",13 = "0",14 = "",15 = "69",16 = "420",17 = "true"}
-// Client  : 1284.019531 : New hive profile data: {1 = "2,970",2 = "449",3 = "-,306",4 = "-,453",5 = "6.2839665412903",6 = "1,976",7 = "795",8 = "-,119",9 = "11",10 = "4.3614330291748",11 = "600",12 = "9,797,646",13 = "0",14 = "",15 = "69",16 = "420",17 = "true"}
-function handleSkill(lineStr: string, bIsNewSkill: boolean = false): boolean {
+function handleSkill(lineStr: string): boolean {
+    // Client  : 1284.019531 : Current hive profile data: {1 = "2,966",2 = "439",3 = "-,309",4 = "-,457",5 = "6.283908367157",6 = "1,976",7 = "795",8 = "-,119",9 = "11",10 = "4.3614330291748",11 = "600",12 = "9,797,646",13 = "0",14 = "",15 = "69",16 = "420",17 = "true"}
+    // Client  : 1284.019531 : New hive profile data: {1 = "2,970",2 = "449",3 = "-,306",4 = "-,453",5 = "6.2839665412903",6 = "1,976",7 = "795",8 = "-,119",9 = "11",10 = "4.3614330291748",11 = "600",12 = "9,797,646",13 = "0",14 = "",15 = "69",16 = "420",17 = "true"}
     if (!(lineStr.startsWith("Client  : ") && lineStr.includes(" hive profile data: {"))) {
         return false;
     }
 
-    var skillData = deserializeSkillModel(lineStr.substring(lineStr.lastIndexOf('{')), (jstr, err) => {
+    const skillData = deserializeSkillModel(lineStr.substring(lineStr.lastIndexOf('{')), (jstr, err) => {
         logger.error(`Failed to parse skill on line ${lineNum}`, lineStr, jstr, err);
     });
     if (!skillData || skillData == undefined) {
@@ -313,14 +305,14 @@ function handleSkill(lineStr: string, bIsNewSkill: boolean = false): boolean {
     return true;
 };
 
-// Steam Id: 1234567890123
 function handleSteamId(lineStr: string): boolean {
+    // Steam Id: 1234567890123
     const steamIdStr = "Steam Id: ";
     if (!lineStr.startsWith(steamIdStr)) {
         return false;
     }
 
-    var tmpId = lineStr.substring(steamIdStr.length).trim();
+    const tmpId = lineStr.substring(steamIdStr.length).trim();
     if (!tmpId || tmpId.length < 1) {
         return false;
     }
@@ -333,14 +325,15 @@ function handleSteamId(lineStr: string): boolean {
         logger.warn("You should probably quit smurfing...");
 
         // Reset all of the skill values to zero to avoid problems...
-        clearSkillData();
+        skills = getEmptySkills();
     }
+
     return true;
 }
 
-// Client  : 1279.340820 : - Marine Team Victory
-// Client  : 1504.927124 : - Alien Team Victory
 function handleVictory(lineStr: string): boolean {
+    // Client  : 1279.340820 : - Marine Team Victory
+    // Client  : 1504.927124 : - Alien Team Victory
     const teamVictoryStr = " Team Victory";
     if (!lineStr.startsWith("Client  : ") || !lineStr.endsWith(teamVictoryStr)) {
         return false;
@@ -355,19 +348,20 @@ function handleVictory(lineStr: string): boolean {
             logger.warn(`Game state was unexpected (${gameData.state}) for a victory condition`);
             break;
     }
+
     const teamIdx = lineStr.lastIndexOf('- ') + 2;
-    const winner = lineStr.substring(teamIdx, lineStr.length - teamVictoryStr.length).trim().concat('s');
+    const winner = lineStr.substring(teamIdx, lineStr.length - teamIdx - teamVictoryStr.length).trim().concat('s');
     setState(EGameState.Postgame, `${winner} won on ${gameData.mapName}`);
 
     if (!isReadingBacklog && !isManuallyPaused) {
-        const eventData = {
+        const eventData: RoundCompletedEventData = {
             gameMode: gameData.gameMode,
             mapName: gameData.mapName,
             serverAddr: gameData.serverAddr,
             serverLocation: gameData.serverLocation,
             serverName: gameData.serverName,
             winningTeam: winner,
-        } as RoundCompletedEventData;
+        };
         eventManager.triggerEvent(NS2_EVENT_SOURCE_ID, NS2_ROUND_COMPLETED_EVENT_ID, eventData, false);
     }
     return true;
@@ -381,29 +375,21 @@ function setState(newState: EGameState, reason: string): void {
     }
 };
 
-
-export const ns2Monitor = Object.freeze({
+const ns2Monitor = Object.freeze({
     initialize: async (params: ScriptParams, modules: ScriptModules): Promise<void> => {
-        clearSkillData();
-        eventManager = modules.eventManager; 
-        isReadingBacklog = true;
-        lineNumsNeeded = await countLinesInFile(params.logFile);
-        buildWatcher(params.logFile);
+        eventManager = modules.eventManager;
+        watcher = await buildWatcher(params.logFile);
     },
-    destroy: (): void => {
-        fileTail?.unwatch();
-        isReadingBacklog = true;
-        lineNum = 0;
-        lineNumsNeeded = 0;
+    destroy: async (): Promise<void> => {
+        await watcher?.quit();
     },
-    updateParams: async (params: ScriptParams): Promise<void> => {
-        if (!eventManager || eventManager == undefined || !skills || skills == undefined) {
+    updateSettings: async (params: ScriptParams): Promise<void> => {
+        if (!eventManager || eventManager == undefined) {
             throw new Error("Unable to updateParams() if initialize() has not been invoked");
         }
-        fileTail?.unwatch();
+        await watcher?.quit();
         isReadingBacklog = true;
-        lineNumsNeeded = await countLinesInFile(params.logFile);
-        buildWatcher(params.logFile);
+        watcher = await buildWatcher(params.logFile);
     },
 
     pauseEvents: () => { isManuallyPaused = true; },
@@ -422,3 +408,5 @@ export const ns2Monitor = Object.freeze({
     getServerName: () => { return gameData.serverName; },
     getState: () => { return gameData.state; },
 });
+
+export default ns2Monitor;

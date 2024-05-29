@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -17,7 +17,7 @@
 import { ReplaceVariable } from "@crowbartools/firebot-custom-scripts-types/types/modules/replace-variable-manager";
 
 import { getGameModeFromMapName } from "../types/game-data";
-import { ns2Monitor } from "../ns2-monitor";
+import ns2Monitor from "../ns2-monitor";
 
 const model: ReplaceVariable = {
     definition: {

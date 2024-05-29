@@ -1,6 +1,6 @@
 // Natural Selection 2 application integration for Firebot
 //
-// Copyright © 2024 by phroggie
+// Copyright Â© 2024 by phroggie
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 //
@@ -22,9 +22,9 @@ import {
     NS2_EXAMPLE_SERVER_NAME,
     NS2_SERVER_CONNECTED_EVENT_ID
 } from "../constants";
-import { GameEventData } from "../types";
+import { EventDefinition } from "../types";
 
-const model = {
+const model: EventDefinition = {
     id: NS2_SERVER_CONNECTED_EVENT_ID,
     name: "Server Connected",
     description: "When client has successfully connected to a server",
@@ -34,7 +34,7 @@ const model = {
         serverAddr: NS2_EXAMPLE_SERVER_ADDR,
         serverLocation: NS2_EXAMPLE_SERVER_LOC,
         serverName: NS2_EXAMPLE_SERVER_NAME,
-    } as GameEventData,
+    },
 };
 
 export default model;
