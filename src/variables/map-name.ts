@@ -26,7 +26,7 @@ const model: ReplaceVariable = {
         possibleDataOutput: ["text"],
     },
     evaluator: async (trigger): Promise<string> => {
-        return getGameModeFromMapName(trigger.metadata.eventData?.mapName as string)
+        return trigger.metadata.eventData?.mapName as string
             ?? ns2Monitor.getMapName()
             ?? "unknown";
     },
