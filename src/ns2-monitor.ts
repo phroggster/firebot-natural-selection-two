@@ -350,7 +350,8 @@ function handleVictory(lineStr: string): boolean {
     }
 
     const teamIdx = lineStr.lastIndexOf('- ') + 2;
-    const winner = lineStr.substring(teamIdx, lineStr.length - teamIdx - teamVictoryStr.length).trim().concat('s');
+    let winner = lineStr.substring(teamIdx);
+    winner = winner.substring(0, winner.length - teamVictoryStr.length).concat('s');
     setState(EGameState.Postgame, `${winner} won on ${gameData.mapName}`);
 
     if (!isReadingBacklog && !isManuallyPaused) {
