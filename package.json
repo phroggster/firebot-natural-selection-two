@@ -1,7 +1,7 @@
 {
     "name": "firebot-natural-selection-two",
     "scriptOutputName": "naturalSelectionTwoFirebot",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "A Natural Selection 2 integration plugin for Firebot",
     "main": "",
     "type": "commonjs",
